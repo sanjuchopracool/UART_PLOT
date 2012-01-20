@@ -15,7 +15,8 @@ SOURCES += main.cpp\
     src/receiveport.cpp
 
 HEADERS  += mainwindow.h \
-    src/receiveport.h
-
+    src/receiveport.h \
+    CurveData.h
+LIBS += -l qextserialport
 FORMS    += mainwindow.ui
 LIBS += -lqwt
