@@ -11,9 +11,11 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    src/receiveport.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    src/receiveport.h
 
 FORMS    += mainwindow.ui
 LIBS += -lqwt
