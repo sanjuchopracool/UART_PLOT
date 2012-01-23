@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_2->addItem("57.6K",QVariant::fromValue(BAUD57600));
     ui->comboBox_2->addItem("76.8K",QVariant::fromValue(BAUD76800));
     ui->comboBox_2->addItem("115.2K",QVariant::fromValue(BAUD115200));
-    ui->comboBox_2->setCurrentIndex(6); //38.4 k default baud rate
+    ui->comboBox_2->setCurrentIndex(5); //38.4 k default baud rate
 
 
     ui->comboBox_3->addItem("5",QVariant::fromValue(DATA_5));
@@ -100,8 +100,10 @@ void MainWindow::on_pushButton_clicked()
         temp =ui->comboBox->itemData(ui->comboBox->currentIndex());
                 port =new QextSerialPort(temp.value<QString>());
     }
-    port->setBaudRate(BAUD19200);
-    port->setDataBits(DATA_8);
+    temp=ui->comboBox_2->itemData(ui->comboBox_2->currentIndex());
+            port->setBaudRate(temp.value<BaudRateType>());
+    temp=ui->comboBox_3->itemData(ui->comboBox_3->currentIndex());
+    port->setDataBits(temp.value<DataBitsType>());
     port->setFlowControl(FLOW_OFF);
     port->setStopBits(STOP_1);
     port->setParity(PAR_NONE);
@@ -206,11 +208,13 @@ void MainWindow::replot()
 }
 void MainWindow::received_signal(const QByteArray &data, int num)
 {
+
     for(int i=0 ;i<num;i++)
         recData.enqueue(data[i]);
     if(recData.size() >ui->lineEdit_6->text().toInt())
     {
         int i=0;
+        QString datastring;
         while((ch=recData.dequeue())!='\n')
             datastring[i++]=ch;
         ui->textEdit->append(datastring);
@@ -219,6 +223,7 @@ void MainWindow::received_signal(const QByteArray &data, int num)
 }
 void MainWindow::updatedata(QString str)
 {
+
     QTextStream in(&str);
     for(int i=0;i<noofcurves;i++)
     {

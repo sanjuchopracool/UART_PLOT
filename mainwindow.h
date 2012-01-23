@@ -37,7 +37,7 @@ private:
     QTimer mytimer;
     QQueue<char> recData;
     QByteArray dataarray;
-    QString datastring;
+
     char ch,ch1;
     double y_data[10];
     YData *mycurvedata;
