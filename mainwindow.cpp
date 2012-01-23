@@ -6,6 +6,8 @@
 #include<QFileDialog>
 #include<QFile>
 #include<QTextStream>
+#include<iostream>
+using namespace std ;
 Q_DECLARE_METATYPE(BaudRateType)
 Q_DECLARE_METATYPE(StopBitsType)
 Q_DECLARE_METATYPE(DataBitsType)
@@ -14,11 +16,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    mycurvedatas =new CurveData[10];
     double xaxisdata[20000];
-    for(int i=0 ; i<2000;i++)
+    for(int i=0 ; i<20000;i++)
         xaxisdata[i]=i;
     xdata =xaxisdata;
+    mycurvedata =new YData[10];
     mycurves =new QwtPlotCurve[10];
     ui->setupUi(this);
     ui->comboBox->addItem(tr("/dev/ttyS0"),QVariant::fromValue(QString("/dev/ttyS0")));
@@ -75,7 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setCentralWidget(ui->splitter);
     //connect()
     connect(&mytimer,SIGNAL(timeout()),this,SLOT(replot()));
-    mytimer.start(30);
+    mytimer.start(15);
 
 }
 
@@ -110,6 +112,7 @@ void MainWindow::on_pushButton_clicked()
     recPort =new ReceivePort(port);
     connect(recPort,SIGNAL(BytesReceived_signal(QByteArray,int)),
             this,SLOT(received_signal(QByteArray,int)));
+    connect(this,SIGNAL(datalinerec_signal(QString)),this,SLOT(updatedata(QString)));
     recPort->start();
 }
 
@@ -193,12 +196,9 @@ void MainWindow::on_pushButton_5_clicked()
             mypen.setStyle(Qt::DotLine);
                     break;
         }
-        mypen.setWidthF(2);
-        this->mycurves[i].setSamples(xdata,this->mycurvedatas[i].ydata,this->noofsamples);
+        mypen.setWidthF(1);
         this->mycurves[i].setPen(mypen);
-        mycurves[i].attach(ui->qwtPlot);
     }
-    ui->qwtPlot->replot();
 }
 void MainWindow::replot()
 {
@@ -214,5 +214,22 @@ void MainWindow::received_signal(const QByteArray &data, int num)
         while((ch=recData.dequeue())!='\n')
             datastring[i++]=ch;
         ui->textEdit->append(datastring);
+        emit datalinerec_signal(datastring);
+    }
+}
+void MainWindow::updatedata(QString str)
+{
+    QTextStream in(&str);
+    for(int i=0;i<noofcurves;i++)
+    {
+        in>>y_data[i];
+        in>>ch1;
+    }
+    for(int i=0;i<noofcurves;i++)
+    {
+        memmove(mycurvedata[i].data,&mycurvedata[i].data[1]
+                    ,(noofsamples-1)*sizeof(double));
+        mycurvedata[i].data[noofsamples-1]=y_data[i];
+        this->mycurves[i].setSamples(xdata,mycurvedata[i].data,noofsamples);
     }
 }
