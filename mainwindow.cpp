@@ -3,6 +3,11 @@
 #include<QMetaType>
 #include<qextserialport.h>
 #include<QValidator>
+#include<QFileDialog>
+#include<QFile>
+#include<QTextStream>
+#include<qwt/qwt_plot.h>
+#include<qwt/qwt_plot_curve.h>
 Q_DECLARE_METATYPE(BaudRateType)
 Q_DECLARE_METATYPE(StopBitsType)
 Q_DECLARE_METATYPE(DataBitsType)
@@ -47,14 +52,24 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_5->addItem("2",QVariant::fromValue(STOP_2));
     ui->comboBox_5->setCurrentIndex(0);
 
-    ui->textEdit->setText("Read Only Mode");
+   // ui->textEdit->setText("Read Only Mode");
 
     QValidator *myvalidator =new QDoubleValidator ;
     ui->lineEdit_5->setValidator(myvalidator);
     ui->lineEdit_2->setValidator(myvalidator);
     ui->lineEdit_3->setValidator(myvalidator);
     ui->lineEdit_4->setValidator(myvalidator);
-
+    //////////////////////////////////////////////////////
+   //   QWTPLOT
+    ///////////////////////////////////////////////////////
+    ui->qwtPlot->setAxisTitle(QwtPlot::xBottom,tr("Time"));
+    ui->qwtPlot->setAxisTitle(QwtPlot::yLeft,tr("Readings"));
+    ui->qwtPlot->setCanvasBackground(Qt::white);
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom,0,ui->lineEdit_4->text().toInt());
+    ui->qwtPlot->setAxisScale(QwtPlot::yLeft,ui->lineEdit_2->text().toInt(),
+                              ui->lineEdit_3->text().toInt());
+    this->setCentralWidget(ui->splitter);
+    //connect()
 
 }
 
@@ -68,13 +83,63 @@ void MainWindow::on_pushButton_clicked()
     ui->groupBox->setEnabled(false);
     ui->pushButton->setEnabled(false);
     ui->pushButton_2->setEnabled(true);
-    ui->label_6->setText("Connected!");
+    QVariant temp;
+    QextSerialPort *port ;
+    if(ui->checkBox->isChecked())
+        port =new QextSerialPort(ui->lineEdit->text());
+    else
+    {
+        temp =ui->comboBox->itemData(ui->comboBox->currentIndex());
+                port =new QextSerialPort(temp.value<QString>());
+    }
+    port->setBaudRate(BAUD19200);
+    port->setDataBits(DATA_8);
+    port->setFlowControl(FLOW_OFF);
+    port->setStopBits(STOP_1);
+    port->setParity(PAR_NONE);
+    if(port->open(QIODevice::ReadWrite))
+        ui->label_6->setText("Successfully opened the port");
+    else
+        ui->label_6->setText("NotConnected!");
+    recPort =new ReceivePort(port);
+    connect(recPort,SIGNAL(BytesReceived_signal(QByteArray)),this,SLOT(WriteTxt(QByteArray)));
+    recPort->start();
 }
 
 void MainWindow::on_pushButton_2_clicked()
 {
+    ReceivePort *temp =recPort ;
+    recPort=NULL;
+    delete temp ;
     ui->groupBox->setEnabled(true);
     ui->pushButton->setEnabled(true);
     ui->pushButton_2->setDisabled(true);
     ui->label_6->setText("Not connected! open port");
+}
+void MainWindow::WriteTxt(const QByteArray &data)
+{
+   ui->textEdit->append(data);
+}
+
+void MainWindow::on_pushButton_4_clicked()
+{
+    QString filename = QFileDialog::getSaveFileName(this,tr("Save file"),QDir::currentPath(),
+                                                    tr("Data files(*.xcv *.txt) ;;ALL files (*.*)"));
+
+      QFile file(filename);
+           if (!file.open(QFile::WriteOnly | QFile::Text))
+                   qDebug()<<"Failed to open file";
+           QTextStream savestream(&file);
+           savestream<<(ui->textEdit)->toPlainText();
+           file.close();
+}
+
+void MainWindow::on_pushButton_5_clicked()
+{
+    ui->qwtPlot->setAxisScale(QwtPlot::xBottom,0,ui->lineEdit_4->text().toInt());
+    ui->qwtPlot->setAxisScale(QwtPlot::yLeft,ui->lineEdit_2->text().toInt(),
+                              ui->lineEdit_3->text().toInt());
+    this->noofsamples=ui->lineEdit_4->text().toInt();
+    this->noofsamples=ui->lineEdit_5->text().toInt();
+    ui->qwtPlot->replot();
 }

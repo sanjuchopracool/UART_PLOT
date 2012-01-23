@@ -16,6 +16,7 @@ private:
 
 public:
     ReceivePort(QextSerialPort *port);
+    ~ReceivePort();
     void stopReceiving();
     void startReceiving();
 

@@ -14,8 +14,8 @@ void ReceivePort::run()
     {
         if(stopped)
         {
-            stopped =false ;
-            break;
+           // stopped =false ;
+           continue;
         }
         numbytes = receiveport->bytesAvailable();
         if(!(numbytes==0))
@@ -25,7 +25,7 @@ void ReceivePort::run()
             receivedData =data ;
             receivemutex.unlock();
             emit BytesReceived_signal(receivedData);
-            //qDebug()<<data;
+           // qDebug()<<data;
         }
     }
 
@@ -37,4 +37,9 @@ void ReceivePort::startReceiving()
 void ReceivePort::stopReceiving()
 {
     stopped = true ;
+}
+ReceivePort::~ReceivePort()
+{
+    this->terminate();
+    this->wait();
 }
