@@ -6,7 +6,7 @@ class CurveData
     double *ydata;
     CurveData()
     {
-        double data[10000] ={0};
+        double data[20000] ={0};
         ydata=data;
     }
 };

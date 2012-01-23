@@ -24,7 +24,7 @@ void ReceivePort::run()
             receiveport->read(data,numbytes);
             receivedData =data ;
             receivemutex.unlock();
-            emit BytesReceived_signal(receivedData);
+            emit BytesReceived_signal(receivedData,numbytes);
            // qDebug()<<data;
         }
     }

@@ -6,8 +6,6 @@
 #include<QFileDialog>
 #include<QFile>
 #include<QTextStream>
-#include<qwt/qwt_plot.h>
-#include<qwt/qwt_plot_curve.h>
 Q_DECLARE_METATYPE(BaudRateType)
 Q_DECLARE_METATYPE(StopBitsType)
 Q_DECLARE_METATYPE(DataBitsType)
@@ -16,6 +14,12 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    mycurvedatas =new CurveData[10];
+    double xaxisdata[20000];
+    for(int i=0 ; i<2000;i++)
+        xaxisdata[i]=i;
+    xdata =xaxisdata;
+    mycurves =new QwtPlotCurve[10];
     ui->setupUi(this);
     ui->comboBox->addItem(tr("/dev/ttyS0"),QVariant::fromValue(QString("/dev/ttyS0")));
     ui->comboBox->addItem(tr("/dev/ttyS1"),QVariant::fromValue(QString("/dev/ttyS1")));
@@ -70,6 +74,8 @@ MainWindow::MainWindow(QWidget *parent) :
                               ui->lineEdit_3->text().toInt());
     this->setCentralWidget(ui->splitter);
     //connect()
+    connect(&mytimer,SIGNAL(timeout()),this,SLOT(replot()));
+    mytimer.start(30);
 
 }
 
@@ -102,7 +108,8 @@ void MainWindow::on_pushButton_clicked()
     else
         ui->label_6->setText("NotConnected!");
     recPort =new ReceivePort(port);
-    connect(recPort,SIGNAL(BytesReceived_signal(QByteArray)),this,SLOT(WriteTxt(QByteArray)));
+    connect(recPort,SIGNAL(BytesReceived_signal(QByteArray,int)),
+            this,SLOT(received_signal(QByteArray,int)));
     recPort->start();
 }
 
@@ -116,11 +123,6 @@ void MainWindow::on_pushButton_2_clicked()
     ui->pushButton_2->setDisabled(true);
     ui->label_6->setText("Not connected! open port");
 }
-void MainWindow::WriteTxt(const QByteArray &data)
-{
-   ui->textEdit->append(data);
-}
-
 void MainWindow::on_pushButton_4_clicked()
 {
     QString filename = QFileDialog::getSaveFileName(this,tr("Save file"),QDir::currentPath(),
@@ -136,10 +138,81 @@ void MainWindow::on_pushButton_4_clicked()
 
 void MainWindow::on_pushButton_5_clicked()
 {
+    double dummydata=0;
     ui->qwtPlot->setAxisScale(QwtPlot::xBottom,0,ui->lineEdit_4->text().toInt());
     ui->qwtPlot->setAxisScale(QwtPlot::yLeft,ui->lineEdit_2->text().toInt(),
                               ui->lineEdit_3->text().toInt());
     this->noofsamples=ui->lineEdit_4->text().toInt();
-    this->noofsamples=ui->lineEdit_5->text().toInt();
+    if(noofsamples>20000)
+        noofsamples=20000;
+    this->noofcurves=ui->lineEdit_5->text().toInt();
+    if(noofcurves >10)
+        noofcurves =10;
+    for(int i=0 ;i<10;i++)
+    {
+        this->mycurves[i].setSamples(&dummydata,&dummydata,1);
+        mycurves[i].attach(ui->qwtPlot);
+    }
+    QPen mypen ;
+    for(int i=0 ;i<noofcurves;i++)
+    {
+        switch(i)
+        {
+        case 0:
+            mypen =QPen(Qt::red);
+                    break;
+        case 1:
+            mypen =QPen(Qt::blue);
+                    break;
+        case 2:
+            mypen =QPen(Qt::green);
+                    break;
+        case 3:
+            mypen =QPen(Qt::magenta);
+                    break;
+        case 4:
+            mypen =QPen(Qt::cyan);
+                    break;
+        case 5:
+            mypen =QPen(Qt::black);
+                    break;
+        case 6:
+            mypen =QPen(Qt::darkYellow);
+            mypen.setStyle(Qt::DotLine);
+                    break;
+        case 7:
+            mypen =QPen(Qt::darkGray);
+            mypen.setStyle(Qt::DotLine);
+                    break;
+        case 8:
+            mypen =QPen(Qt::darkMagenta);
+            mypen.setStyle(Qt::DotLine);
+                    break;
+        case 9:
+            mypen =QPen(Qt::darkGreen);
+            mypen.setStyle(Qt::DotLine);
+                    break;
+        }
+        mypen.setWidthF(2);
+        this->mycurves[i].setSamples(xdata,this->mycurvedatas[i].ydata,this->noofsamples);
+        this->mycurves[i].setPen(mypen);
+        mycurves[i].attach(ui->qwtPlot);
+    }
     ui->qwtPlot->replot();
+}
+void MainWindow::replot()
+{
+    ui->qwtPlot->replot();
+}
+void MainWindow::received_signal(const QByteArray &data, int num)
+{
+    for(int i=0 ;i<num;i++)
+        recData.enqueue(data[i]);
+    if(recData.size() >ui->lineEdit_6->text().toInt())
+    {
+        int i=0;
+        while((ch=recData.dequeue())!='\n')
+            datastring[i++]=ch;
+        ui->textEdit->append(datastring);
+    }
 }

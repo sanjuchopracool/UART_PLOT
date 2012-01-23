@@ -23,7 +23,7 @@ public:
 protected:
     void run();
 signals:
-    void BytesReceived_signal(const QByteArray &data);
+    void BytesReceived_signal(const QByteArray &data,int num);
 };
 
 #endif // RECEIVEPORT_H
