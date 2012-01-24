@@ -9,16 +9,12 @@ class ReceivePort :public QThread
 {
     Q_OBJECT
 private:
-
-    bool stopped ;
     QextSerialPort *receiveport ;
     QMutex receivemutex ;
 
 public:
     ReceivePort(QextSerialPort *port);
     ~ReceivePort();
-    void stopReceiving();
-    void startReceiving();
 
 protected:
     void run();

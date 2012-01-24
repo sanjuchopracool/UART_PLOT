@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineEdit_2->setValidator(myvalidator);
     ui->lineEdit_3->setValidator(myvalidator);
     ui->lineEdit_4->setValidator(myvalidator);
+    ui->lineEdit_6->setValidator(myvalidator);
     //////////////////////////////////////////////////////
    //   QWTPLOT
     ///////////////////////////////////////////////////////
@@ -76,9 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
                               ui->lineEdit_3->text().toInt());
     this->setCentralWidget(ui->splitter);
     //connect()
-    connect(&mytimer,SIGNAL(timeout()),this,SLOT(replot()));
-    mytimer.start(15);
-
+    ui->pushButton_2->setEnabled(false);
 }
 
 MainWindow::~MainWindow()
@@ -88,11 +87,11 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_clicked()
 {
+    ui->lineEdit_6->setEnabled(false);
     ui->groupBox->setEnabled(false);
     ui->pushButton->setEnabled(false);
     ui->pushButton_2->setEnabled(true);
     QVariant temp;
-    QextSerialPort *port ;
     if(ui->checkBox->isChecked())
         port =new QextSerialPort(ui->lineEdit->text());
     else
@@ -105,8 +104,10 @@ void MainWindow::on_pushButton_clicked()
     temp=ui->comboBox_3->itemData(ui->comboBox_3->currentIndex());
     port->setDataBits(temp.value<DataBitsType>());
     port->setFlowControl(FLOW_OFF);
-    port->setStopBits(STOP_1);
-    port->setParity(PAR_NONE);
+    temp=ui->comboBox_5->itemData(ui->comboBox_5->currentIndex());
+    port->setStopBits(temp.value<StopBitsType>());
+    temp=ui->comboBox_4->itemData(ui->comboBox_4->currentIndex());
+    port->setParity(temp.value<ParityType>());
     if(port->open(QIODevice::ReadWrite))
         ui->label_6->setText("Successfully opened the port");
     else
@@ -116,6 +117,9 @@ void MainWindow::on_pushButton_clicked()
             this,SLOT(received_signal(QByteArray,int)));
     connect(this,SIGNAL(datalinerec_signal(QString)),this,SLOT(updatedata(QString)));
     recPort->start();
+    connect(&mytimer,SIGNAL(timeout()),this,SLOT(replot()));
+    mytimer.start(15);
+
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -123,6 +127,7 @@ void MainWindow::on_pushButton_2_clicked()
     ReceivePort *temp =recPort ;
     recPort=NULL;
     delete temp ;
+    ui->lineEdit_6->setEnabled(true);
     ui->groupBox->setEnabled(true);
     ui->pushButton->setEnabled(true);
     ui->pushButton_2->setDisabled(true);
@@ -215,7 +220,7 @@ void MainWindow::received_signal(const QByteArray &data, int num)
     {
         int i=0;
         QString datastring;
-        while((ch=recData.dequeue())!='\n')
+        while((ch=recData.dequeue())!='\n' && (!recData.isEmpty()))
             datastring[i++]=ch;
         ui->textEdit->append(datastring);
         emit datalinerec_signal(datastring);

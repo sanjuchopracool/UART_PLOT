@@ -3,7 +3,6 @@
 ReceivePort::ReceivePort(QextSerialPort *port)
 {
     receiveport = port ;
-    stopped = false ;  //initially the receiving is disabled
 }
 void ReceivePort::run()
 {
@@ -12,13 +11,8 @@ void ReceivePort::run()
     QByteArray receivedData ;
     while(1)
     {
-        if(stopped)
-        {
-           // stopped =false ;
-           continue;
-        }
         numbytes = receiveport->bytesAvailable();
-        if(!(numbytes==0))
+        if(numbytes)
         {
             receivemutex.lock();
             receiveport->read(data,numbytes);
@@ -29,14 +23,6 @@ void ReceivePort::run()
         }
     }
 
-}
-void ReceivePort::startReceiving()
-{
-    stopped =false ;
-}
-void ReceivePort::stopReceiving()
-{
-    stopped = true ;
 }
 ReceivePort::~ReceivePort()
 {

@@ -20,3 +20,6 @@ HEADERS  += mainwindow.h \
 LIBS += -l qextserialport
 FORMS    += mainwindow.ui
 LIBS += -lqwt
+
+RESOURCES += \
+    myres.qrc
