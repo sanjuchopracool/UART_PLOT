@@ -7,7 +7,7 @@ public:
     YData()
     {
         for(int i=0 ;i<20000;i++)
-            data[i]=400;
+            data[i]=0;
     }
 };
 

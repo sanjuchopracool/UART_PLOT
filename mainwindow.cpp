@@ -23,6 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mycurvedata =new YData[10];
     mycurves =new QwtPlotCurve[10];
     ui->setupUi(this);
+    this->setWindowTitle("UART Plot");
     ui->comboBox->addItem(tr("/dev/ttyS0"),QVariant::fromValue(QString("/dev/ttyS0")));
     ui->comboBox->addItem(tr("/dev/ttyS1"),QVariant::fromValue(QString("/dev/ttyS1")));
     ui->comboBox->setCurrentIndex(0);  //set dev/ttyS0 default
@@ -153,7 +154,7 @@ void MainWindow::on_pushButton_5_clicked()
     ui->qwtPlot->setAxisScale(QwtPlot::yLeft,ui->lineEdit_2->text().toInt(),
                               ui->lineEdit_3->text().toInt());
     this->noofsamples=ui->lineEdit_4->text().toInt();
-    if(noofsamples>20000)
+    if(noofsamples >20000)
         noofsamples=20000;
     this->noofcurves=ui->lineEdit_5->text().toInt();
     if(noofcurves >10)
