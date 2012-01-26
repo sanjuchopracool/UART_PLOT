@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for(int i=0 ; i<20000;i++)
         xaxisdata[i]=i;
     xdata =xaxisdata;
+    count=0;
     mycurvedata =new YData[10];
     mycurves =new QwtPlotCurve[10];
     ui->setupUi(this);
@@ -116,10 +117,7 @@ void MainWindow::on_pushButton_clicked()
     recPort =new ReceivePort(port);
     connect(recPort,SIGNAL(BytesReceived_signal(QByteArray,int)),
             this,SLOT(received_signal(QByteArray,int)));
-    connect(this,SIGNAL(datalinerec_signal(QString)),this,SLOT(updatedata(QString)));
     recPort->start();
-    connect(&mytimer,SIGNAL(timeout()),this,SLOT(replot()));
-    mytimer.start(15);
 
 }
 
@@ -128,6 +126,9 @@ void MainWindow::on_pushButton_2_clicked()
     ReceivePort *temp =recPort ;
     recPort=NULL;
     delete temp ;
+    QextSerialPort *temp1 =port;
+    port=NULL;
+    delete temp1;
     ui->lineEdit_6->setEnabled(true);
     ui->groupBox->setEnabled(true);
     ui->pushButton->setEnabled(true);
@@ -149,6 +150,13 @@ void MainWindow::on_pushButton_4_clicked()
 
 void MainWindow::on_pushButton_5_clicked()
 {
+    if(count!=0)
+    {
+        disconnect(this,SIGNAL(datalinerec_signal(QString)),this,SLOT(updatedata(QString)));
+        disconnect(&mytimer,SIGNAL(timeout()),this,SLOT(replot()));
+        mytimer.stop();
+    }
+    count++;
     double dummydata=0;
     ui->qwtPlot->setAxisScale(QwtPlot::xBottom,0,ui->lineEdit_4->text().toInt());
     ui->qwtPlot->setAxisScale(QwtPlot::yLeft,ui->lineEdit_2->text().toInt(),
@@ -207,6 +215,9 @@ void MainWindow::on_pushButton_5_clicked()
         mypen.setWidthF(1);
         this->mycurves[i].setPen(mypen);
     }
+    connect(this,SIGNAL(datalinerec_signal(QString)),this,SLOT(updatedata(QString)));
+    connect(&mytimer,SIGNAL(timeout()),this,SLOT(replot()));
+    mytimer.start(10);
 }
 void MainWindow::replot()
 {

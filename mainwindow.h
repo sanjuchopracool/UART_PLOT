@@ -41,6 +41,7 @@ private:
     char ch,ch1;
     double y_data[10];
     YData *mycurvedata;
+    int count;
 signals:
     void datalinerec_signal(QString);
 };
