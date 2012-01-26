@@ -11,10 +11,15 @@ class ReceivePort :public QThread
 private:
     QextSerialPort *receiveport ;
     QMutex receivemutex ;
+    bool stopped;
 
 public:
     ReceivePort(QextSerialPort *port);
     ~ReceivePort();
+    void stoprec()
+    {
+        stopped =true;
+    }
 
 protected:
     void run();

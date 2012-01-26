@@ -3,16 +3,23 @@
 ReceivePort::ReceivePort(QextSerialPort *port)
 {
     receiveport = port ;
+    stopped =false;
 }
 void ReceivePort::run()
 {
     int numbytes =0 ;
     char data[1024] ;
     QByteArray receivedData ;
-    while(1)
+    forever
     {
-        numbytes = receiveport->bytesAvailable();
-        if(numbytes)
+        if(stopped)
+        {
+            stopped=false;
+            break;
+        }
+        receiveport->waitForReadyRead(1);
+        numbytes = this->receiveport->bytesAvailable();
+        if(numbytes > 0)
         {
             receivemutex.lock();
             receiveport->read(data,numbytes);
@@ -26,6 +33,6 @@ void ReceivePort::run()
 }
 ReceivePort::~ReceivePort()
 {
-    this->terminate();
-    this->wait();
+    stoprec();
+    wait();
 }

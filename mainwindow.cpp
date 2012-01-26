@@ -115,9 +115,9 @@ void MainWindow::on_pushButton_clicked()
     else
         ui->label_6->setText("NotConnected!");
     recPort =new ReceivePort(port);
+    recPort->start();
     connect(recPort,SIGNAL(BytesReceived_signal(QByteArray,int)),
             this,SLOT(received_signal(QByteArray,int)));
-    recPort->start();
 
 }
 
@@ -126,6 +126,7 @@ void MainWindow::on_pushButton_2_clicked()
     ReceivePort *temp =recPort ;
     recPort=NULL;
     delete temp ;
+    port->close();
     QextSerialPort *temp1 =port;
     port=NULL;
     delete temp1;
