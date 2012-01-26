@@ -101,6 +101,8 @@ void MainWindow::on_pushButton_clicked()
         temp =ui->comboBox->itemData(ui->comboBox->currentIndex());
                 port =new QextSerialPort(temp.value<QString>());
     }
+    while(!recData.isEmpty())
+        recData.dequeue();
     temp=ui->comboBox_2->itemData(ui->comboBox_2->currentIndex());
             port->setBaudRate(temp.value<BaudRateType>());
     temp=ui->comboBox_3->itemData(ui->comboBox_3->currentIndex());
